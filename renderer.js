@@ -1,8 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const { FOODS, GAMES, CLEANING_ITEMS, PET_MESSAGES } = require('./gameData');
-const { initAnimations, playAnimation } = require('./animationManager');
+const { FOODS, GAMES, CLEANING_ITEMS, PET_MESSAGES, PET_TYPES } = require('./gameData');
+const { initAnimations, playAnimation, playSpriteAnimation } = require('./animationManager');
 const stageManager = require('./stageManager');
+const achievementManager = require('./achievementManager');
+const { ACHIEVEMENTS } = require('./achievements');
 
 // ==========================================
 // CONFIGURACIÓN (VARIABLES MODIFICABLES)
@@ -41,7 +43,16 @@ let gameState = {
     hudOpacity: 0.95,  // HUD transparency (0-1)
     hudOrientation: 'horizontal', // 'horizontal' or 'vertical'
     birthTime: null,   // Timestamp de nacimiento (Date.now())
-    currentStage: null // Cache de etapa actual
+    currentStage: null, 
+    petType: null,
+    stats: {
+        feedCount: 0,
+        playCount: 0,
+        cleanCount: 0,
+        sellCount: 0
+    },
+    completedAchievements: [],
+    claimedAchievements: []
 };
 
 // DOM Elements
@@ -63,6 +74,7 @@ const playBtn = document.getElementById('play-btn');
 const cleanBtn = document.getElementById('clean-btn');
 const rotateHudBtn = document.getElementById('rotate-hud-btn');
 const settingsBtn = document.getElementById('settings-btn');
+const achievementsBtn = document.getElementById('achievements-btn');
 
 const foodMenu = document.getElementById('food-menu');
 const gameMenu = document.getElementById('game-menu');
@@ -110,7 +122,17 @@ async function init() {
     startGameLoop();
     startCoinLoop();
     startFallingCoinLoop();
-    initAnimations(pet); 
+    
+    // Randomize pet if not set
+    // Verify or set petType to 'cat'
+    if (gameState.petType !== 'cat') {
+        gameState.petType = 'cat';
+        saveGame();
+    }
+    
+    const currentStage = gameState.currentStage || updateCurrentStage();
+    const petConfig = PET_TYPES[gameState.petType];
+    initAnimations(pet, gameState.petType, petConfig, currentStage.id); 
     setupInteractiveOverlay();
     setupHUDDragging();
     setupSettingsModal();
@@ -294,6 +316,144 @@ function setupSettingsModal() {
             settingsModal.classList.add('hidden');
         }
     });
+
+    // Achievement Modal Logic
+    const achievementsModal = document.getElementById('achievements-modal');
+    const achievementsList = document.getElementById('achievements-list');
+    const closeAchievementsBtn = document.getElementById('close-achievements-btn');
+    let activeAchievementTab = 'pending'; // 'pending' or 'unlocked'
+
+    achievementsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllMenus();
+        renderAchievements();
+        achievementsModal.classList.remove('hidden');
+    });
+
+    closeAchievementsBtn.addEventListener('click', () => {
+        achievementsModal.classList.add('hidden');
+    });
+
+    achievementsModal.addEventListener('click', (e) => {
+        if (e.target === achievementsModal) {
+            achievementsModal.classList.add('hidden');
+        }
+    });
+
+    // Tab switching logic
+    document.querySelectorAll('.achievements-tabs .tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.achievements-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeAchievementTab = btn.dataset.tab;
+            renderAchievements();
+        });
+    });
+
+    function renderAchievements() {
+        achievementsList.innerHTML = '';
+        
+        // Helper to get progress
+        const getProgress = (ach) => {
+            switch (ach.category) {
+                case 'feed': return gameState.stats.feedCount || 0;
+                case 'play': return gameState.stats.playCount || 0;
+                case 'clean': return gameState.stats.cleanCount || 0;
+                case 'sell': return gameState.stats.sellCount || 0;
+                case 'time': return gameState.totalPlayTime || 0;
+                case 'evolution': 
+                    const stageMap = { 'egg': 0, 'baby': 1, 'child': 2, 'adult': 3 };
+                    return stageMap[gameState.currentStage.id] || 0;
+                default: return 0;
+            }
+        };
+
+        // Filter achievements based on tab
+        let filteredAch = ACHIEVEMENTS.filter(ach => {
+            const isClaimed = gameState.claimedAchievements.includes(ach.id);
+            const isCompleted = gameState.completedAchievements.includes(ach.id);
+            
+            if (activeAchievementTab === 'unlocked') {
+                return isClaimed;
+            } else {
+                // Return those not claimed yet
+                return !isClaimed;
+            }
+        });
+
+        // Sort: for "Logros" tab, those COMPLETED (ready to claim) go FIRST.
+        // Then, those with more progress % come next.
+        if (activeAchievementTab === 'pending') {
+            filteredAch.sort((a, b) => {
+                const isCompA = gameState.completedAchievements.includes(a.id);
+                const isCompB = gameState.completedAchievements.includes(b.id);
+                
+                if (isCompA && !isCompB) return -1;
+                if (!isCompA && isCompB) return 1;
+                
+                // If both same completion status, sort by progress %
+                const progA = Math.min(100, (getProgress(a) / a.target));
+                const progB = Math.min(100, (getProgress(b) / b.target));
+                return progB - progA;
+            });
+        }
+
+        filteredAch.forEach(ach => {
+            const isClaimed = gameState.claimedAchievements.includes(ach.id);
+            const isCompleted = gameState.completedAchievements.includes(ach.id);
+            const item = document.createElement('div');
+            item.className = `achievement-item ${isClaimed ? 'unlocked' : (isCompleted ? 'completed-pending' : 'locked')}`;
+            
+            const progress = getProgress(ach);
+            const pct = Math.min(100, Math.round((progress / ach.target) * 100));
+            
+            let actionHtml = '';
+            if (isCompleted && !isClaimed) {
+                actionHtml = `<button class="claim-btn" data-id="${ach.id}">Reclamar 💰</button>`;
+            } else if (isClaimed) {
+                actionHtml = `<div class="claimed-tag">Reclamado</div>`;
+            }
+
+            item.innerHTML = `
+                <div class="ach-card-icon">${isClaimed ? '✅' : (isCompleted ? '⭐' : '🔒')}</div>
+                <div class="ach-card-info">
+                    <div class="ach-card-name">${ach.name}</div>
+                    <div class="ach-card-desc">${ach.description}</div>
+                    <div class="ach-card-progress-container">
+                        <div class="ach-card-progress-bar" style="width: ${pct}%"></div>
+                        <span class="ach-card-pct">${progress}/${ach.target}</span>
+                    </div>
+                </div>
+                <div class="ach-card-reward-zone">
+                    <div class="ach-card-reward">${ach.reward} 💰</div>
+                    ${actionHtml}
+                </div>
+            `;
+            achievementsList.appendChild(item);
+        });
+
+        // Add event listeners for claim buttons
+        achievementsList.querySelectorAll('.claim-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                const id = btn.dataset.id;
+                if (achievementManager.claimReward(gameState, id)) {
+                    renderAchievements();
+                    updateUI();
+                    saveGame();
+                    playAnimation('anim-jump'); // Celebration
+                }
+            };
+        });
+
+        if (filteredAch.length === 0) {
+            const empty = document.createElement('div');
+            empty.style.textAlign = 'center';
+            empty.style.padding = '20px';
+            empty.style.color = '#777';
+            empty.textContent = activeAchievementTab === 'unlocked' ? 'Aún no has reclamado ningún logro.' : '¡Increíble! Has completado todos los logros.';
+            achievementsList.appendChild(empty);
+        }
+    }
 }
 
 // Apply opacity values to pet and HUD
@@ -351,9 +511,9 @@ function onStageChange(newStage, previousStage) {
     
     // Actualizar visual inmediatamente
     updatePetVisual();
-    
-    // Opcional: Mostrar notificación visual
-    // (puedes agregar un popup temporal aquí si quieres)
+
+    // Check achievements for evolution
+    achievementManager.checkAchievements(gameState, (ach) => updateUI());
 }
 
 const petEmoji = document.getElementById('pet-emoji');
@@ -364,13 +524,26 @@ const petEmoji = document.getElementById('pet-emoji');
 function updatePetVisual() {
     const stage = gameState.currentStage || updateCurrentStage();
     const visual = stageManager.getVisualProperties(stage, gameState.totalPlayTime);
+    const petConfig = PET_TYPES[gameState.petType];
+    const isSpritesheet = petConfig && (stage.id !== 'egg');
     
     // Actualizar tamaño
-    pet.style.width = `${visual.size}px`;
-    pet.style.height = `${visual.size}px`;
+    if (isSpritesheet) {
+        const frameW = parseFloat(pet.style.getPropertyValue('--frame-w')) || 32;
+        const frameH = parseFloat(pet.style.getPropertyValue('--frame-h')) || 32;
+        const ratio = frameW / frameH;
+        
+        pet.style.height = `${visual.size}px`;
+        pet.style.width = `${visual.size * ratio}px`;
+        pet.style.setProperty('--pet-w', visual.size * ratio);
+    } else {
+        pet.style.width = `${visual.size}px`;
+        pet.style.height = `${visual.size}px`;
+        pet.style.setProperty('--pet-w', visual.size);
+    }
     
     // Toggle background and border based on stage config
-    if (visual.showBackground) {
+    if (visual.showBackground && !isSpritesheet) {
         pet.classList.add('square-pet');
         pet.style.border = ''; // Restore to CSS default
         pet.style.boxShadow = ''; // Restore to CSS default
@@ -387,7 +560,7 @@ function updatePetVisual() {
     }
 
     // Toggle Face Visibility
-    if (visual.showFace) {
+    if (visual.showFace && !isSpritesheet) {
         pet.classList.add('pet-with-face');
         petEmoji.textContent = ''; // Hide emoji text
         
@@ -407,8 +580,18 @@ function updatePetVisual() {
         }
     } else {
         pet.classList.remove('pet-with-face');
-        petEmoji.style.fontSize = `${visual.fontSize}px`;
-        petEmoji.textContent = visual.emoji;
+        
+        // Handle spritesheet visibility vs emoji
+        const petConfig = PET_TYPES[gameState.petType];
+        if (petConfig && (stage.id !== 'egg')) {
+            petEmoji.textContent = ''; // Hide emoji if we have a spritesheet pet
+            pet.classList.add('pet-spritesheet');
+        } else {
+            petEmoji.style.fontSize = `${visual.fontSize}px`;
+            petEmoji.textContent = visual.emoji;
+            pet.classList.remove('pet-spritesheet');
+            pet.style.backgroundImage = 'none';
+        }
     }
 
     // Auto-adjust speech bubble position if needed (though CSS handles it)
@@ -515,8 +698,28 @@ function consumeItem(item) {
     gameState.dirt = Math.min(gameState.maxDirt, Math.max(0, gameState.dirt + item.dirt));
     
     let anim = 'anim-shake'; // Default eat
-    if (GAMES.some(g => g.id === item.id)) anim = 'anim-jump';
-    if (item.life < 0) anim = 'anim-wobble'; // Sick/Mud
+    if (GAMES.some(g => g.id === item.id)) {
+        // Play acts as "play" or "walk" animation
+        playSpriteAnimation('play');
+        gameState.stats.playCount = (gameState.stats.playCount || 0) + 1;
+        achievementManager.checkAchievements(gameState, (ach) => updateUI());
+        updateUI();
+        closeAllMenus();
+        return; 
+    }
+    
+    // For food
+    if (item.life < 0) {
+       playAnimation('anim-wobble'); // Sick/Mud
+    } else {
+       // Food uses "eat" animation (CatLick for cat)
+       playSpriteAnimation('eat');
+       gameState.stats.feedCount = (gameState.stats.feedCount || 0) + 1;
+       achievementManager.checkAchievements(gameState, (ach) => updateUI());
+       updateUI();
+       closeAllMenus();
+       return;
+    }
     
     playAnimation(anim);
     updateUI();
@@ -534,7 +737,10 @@ function cleanItem(item) {
     if (item.price > 0) gameState.coins -= item.price;
 
     gameState.dirt = Math.max(0, gameState.dirt - item.dirtRemoval);
-    playAnimation('anim-spin'); // Happy clean spin
+    // Cleaning acts as "eat" animation (CatLick) as requested
+    playSpriteAnimation('eat');
+    gameState.stats.cleanCount = (gameState.stats.cleanCount || 0) + 1;
+    achievementManager.checkAchievements(gameState, (ach) => updateUI());
     updateUI();
     closeAllMenus();
 }
@@ -620,22 +826,36 @@ function updateUI() {
     // Update pet visual based on current stage
     updatePetVisual();
 
-    // Game Over Check
     const stage = gameState.currentStage || updateCurrentStage();
     const visual = stageManager.getVisualProperties(stage, gameState.totalPlayTime);
+    const petConfig = PET_TYPES[gameState.petType];
+    const isSpritesheet = petConfig && (stage.id !== 'egg');
 
     if (gameState.life <= 0) {
         gameOverScreen.classList.remove('hidden');
-        if (visual.showBackground) pet.style.backgroundColor = '#555'; 
+        if (visual.showBackground && !isSpritesheet) pet.style.backgroundColor = '#555'; 
     } else {
         gameOverScreen.classList.add('hidden');
         // Color is managed by updatePetVisual, but dirt overrides if background is shown
-        if (gameState.dirt > 50 && visual.showBackground) {
+        if (gameState.dirt > 50 && visual.showBackground && !isSpritesheet) {
             pet.style.backgroundColor = '#8d6e63';
         }
     }
 
     // Manure Bin Update
+    updateManureBin();
+    
+    // Low Health Warning (Shake Window)
+    if (gameState.life < 20 && !gameState.isSleeping) {
+        if (!window._lastShake || Date.now() - window._lastShake > 2000) {
+            const { ipcRenderer } = require('electron');
+            ipcRenderer.send('shake-window');
+            window._lastShake = Date.now();
+        }
+    }
+}
+
+function updateManureBin() {
     // Show bin if dirt > 20
     if (gameState.dirt > 20) {
         poopBin.style.display = 'block';
@@ -685,6 +905,12 @@ function startGameLoop() {
                 gameState.dirt = Math.min(gameState.maxDirt, gameState.dirt + dirtAmount);
             }
         }
+        
+        // Every 30 seconds check for time achievement
+        if (gameState.tickCount % 30 === 0 && gameState.life > 0) {
+            achievementManager.checkAchievements(gameState, (ach) => updateUI());
+        }
+
         updateUI();
     }, TICK_RATE);
 }
@@ -792,12 +1018,18 @@ function resetGame() {
         petY: null,
         petOpacity: 0.95,
         hudOpacity: 0.95,
-        birthTime: Date.now(),  // Nuevo nacimiento
-        currentStage: null      // Reiniciar etapa
+        birthTime: Date.now(),
+        currentStage: null,
+        petType: null
     };
     
-    // Inicializar etapa como huevo
     updateCurrentStage();
+    
+    // Randomize pet for new game
+    const types = Object.keys(PET_TYPES);
+    gameState.petType = types[Math.floor(Math.random() * types.length)];
+    const petConfig = PET_TYPES[gameState.petType];
+    initAnimations(pet, gameState.petType, petConfig);
     
     saveGame();
     updateUI();
@@ -821,6 +1053,11 @@ sellManureBtn.addEventListener('click', (e) => {
     if (gameState.dirt > 80) {
         gameState.coins += 12; // Reward for selling manure
         gameState.dirt = 20; // Cleans it a bit but not fully
+        
+        // Track stats and check achievements
+        gameState.stats.sellCount = (gameState.stats.sellCount || 0) + 1;
+        achievementManager.checkAchievements(gameState, (ach) => updateUI());
+        
         playAnimation('anim-spin');
         updateUI();
     }

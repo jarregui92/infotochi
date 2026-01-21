@@ -3,7 +3,9 @@
 [![Electron](https://img.shields.io/badge/Electron-v13+-47848F?style=for-the-badge&logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
-**Infotochi** es una mascota virtual interactiva para escritorio diseñada para acompañarte mientras trabajas. Vive en un overlay transparente sobre tus ventanas, permitiéndote cuidar de tu pequeño amigo sin interrumpir tu flujo de trabajo.
+**Infotochi** es un tierno **gatito virtual** interactivo para escritorio diseñado para acompañarte mientras trabajas. Vive en un overlay transparente sobre tus ventanas, permitiéndote cuidar de tu pequeño amigo sin interrumpir tu flujo de trabajo.
+
+![Mascota Gatito](animations/Cat/CatIdle/CatIdle.png)
 
 ## ✨ Características Principales
 
@@ -14,10 +16,15 @@ Tu mascota no es estática; crece contigo. El ciclo de vida incluye 4 etapas bio
 - **Niño:** Activo, curioso y con ganas de jugar.
 - **Adulto:** Tu compañero definitivo con un ritmo de vida equilibrado.
 
+### 🏆 Sistema de Logros y Desafíos
+- **Más de 50 logros:** Desbloquea desafíos por alimentar, jugar, limpiar y evolucionar a tu mascota.
+- **Pestañas de Seguimiento:** Gestiona tus logros pendientes y reclama tus recompensas en monedas manualmente.
+- **Dificultad Progresiva:** Retos desde 1 hasta 1000 acciones.
+
 ### 📊 HUD Inteligente y Personalizable
 - **Doble Orientación:** Alterna entre una vista **Horizontal** (barras visuales) y **Vertical** (porcentajes compactos).
-- **Control de Transparencia:** Ajusta la opacidad de la mascota y del HUD de forma independiente para que no te estorbe.
-- **Draggable:** Tanto la mascota como el HUD pueden arrastrarse y colocarse en cualquier lugar de la pantalla.
+- **Control de Transparencia:** Ajusta la opacidad de la mascota y del HUD de forma independiente.
+- **Draggable:** Tanto el gatito como el HUD pueden arrastrarse libremente.
 
 ### 💬 Comunicación Directa
 - **Globos de Texto:** El Infotochi te hablará para pedirte comida, un baño o simplemente para saludarte. El sistema detecta automáticamente sus necesidades críticas y las prioriza en el diálogo.

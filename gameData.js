@@ -1,4 +1,7 @@
+const petConfig = require('./petConfig.json');
+
 module.exports = {
+    PET_TYPES: petConfig.PET_TYPES,
     FOODS: [
         { id: 'cookie', icon: '🍪', name: 'Galleta', life: 10, fun: 0, dirt: 5, price: 5 },
         { id: 'icecream', icon: '🍦', name: 'Helado', life: 20, fun: 10, dirt: 5, price: 20 },

@@ -44,8 +44,39 @@
     100% { transform: scale(1); }
 }
 
-/* Classes to apply */
-.anim-jump { animation: jump 0.6s ease; }
+/* Spritesheet Animations */
+.pet-spritesheet {
+    background-size: calc(var(--frames) * 100%) 100%; /* Force horizontal strip scaling */
+    background-repeat: no-repeat;
+    image-rendering: pixelated; /* Keep pixel art sharp */
+    background-position: 0 0;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+/* Specific Animations for Spritesheets */
+.sprite-idle {
+    animation: sprite-idle-anim 0.8s steps(var(--frames)) infinite;
+}
+
+.sprite-action {
+    animation: sprite-action-anim 1s steps(var(--frames)) forwards;
+}
+
+@keyframes sprite-idle-anim {
+    from { background-position: 0 0; }
+    to { background-position: calc(var(--frames) * var(--pet-w) * -1px) 0; }
+}
+
+@keyframes sprite-action-anim {
+    from { background-position: 0 0; }
+    to { background-position: calc(var(--frames) * var(--pet-w) * -1px) 0; }
+}
+
+/* Classes to apply inherited from original system */
+.anim-jump { animation: jump 0.6s ease; } /* Keep bounce for body if needed */
 .anim-shake { animation: shake 0.5s ease; }
 .anim-spin { animation: spin 0.8s ease-in-out; }
 .anim-bounce { animation: bounce 0.4s ease; }

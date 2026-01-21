@@ -1,0 +1,97 @@
+{
+    "PET_TYPES": {
+        "cat": {
+            "id": "cat",
+            "name": "Gato",
+            "folder": "Cat",
+            "animations": {
+                "idle": {
+                    "name": "CatIdle",
+                    "frames": 2,
+                    "frameWidth": 32,
+                    "frameHeight": 32
+                },
+                "play": {
+                    "name": "CatJump",
+                    "frames": 7,
+                    "frameWidth": 32,
+                    "frameHeight": 32
+                },
+                "eat": {
+                    "name": "CatLick",
+                    "frames": 2,
+                    "frameWidth": 32,
+                    "frameHeight": 32
+                },
+                "walk": {
+                    "name": "CatWalking",
+                    "frames": 6,
+                    "frameWidth": 32,
+                    "frameHeight": 32
+                }
+            }
+        },
+        "dog": {
+            "id": "dog",
+            "name": "Perro",
+            "folder": "Dogs",
+            "animations": {
+                "idle": {
+                    "name": "EvilDogIdle",
+                    "frames": 2,
+                    "frameWidth": 40,
+                    "frameHeight": 40
+                },
+                "play": {
+                    "name": "EvilDogJump",
+                    "frames": 8,
+                    "frameWidth": 32,
+                    "frameHeight": 32
+                },
+                "eat": {
+                    "name": "EvilDogBarking",
+                    "frames": 4,
+                    "frameWidth": 32,
+                    "frameHeight": 32
+                },
+                "walk": {
+                    "name": "DogWalking",
+                    "frames": 8,
+                    "frameWidth": 32,
+                    "frameHeight": 32
+                }
+            }
+        },
+        "mouse": {
+            "id": "mouse",
+            "name": "Ratón",
+            "folder": "Mouse",
+            "animations": {
+                "idle": {
+                    "name": "MouseIdle",
+                    "frames": 2,
+                    "frameWidth": 32,
+                    "frameHeight": 25
+                },
+                "play": {
+                    "name": "MouseWalking",
+                    "frames": 8,
+                    "frameWidth": 32,
+                    "frameHeight": 25
+                },
+                "eat": {
+                    "name": "MouseWalking",
+                    "frames": 8,
+                    "frameWidth": 32,
+                    "frameHeight": 25
+                },
+                "walk": {
+                    "name": "MouseWalking",
+                    "frames": 8,
+                    "frameWidth": 32,
+                    "frameHeight": 25
+                }
+            }
+        }
+    }
+}
