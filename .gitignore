@@ -1,0 +1,5 @@
+node_modules/
+dist/
+savegame.dat
+.DS_Store
+*.log

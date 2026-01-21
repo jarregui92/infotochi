@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infotochi</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+    <div class="container">
+        
+        <!-- HUD Wrapper (Top Center) -->
+        <div class="hud-wrapper">
+            <div class="stats-container">
+                <!-- Horizontal Bars Wrapper -->
+                <div class="bars-wrapper">
+                    <div class="stat-row">
+                        <div class="icon" title="Life (Salud)">❤️</div>
+                        <span id="life-pct" class="stat-pct">100%</span>
+                        <div class="progress-bar">
+                            <div id="life-bar" class="fill life" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="icon" title="Fun (Diversión)">😂</div>
+                        <span id="fun-pct" class="stat-pct">100%</span>
+                        <div class="progress-bar">
+                            <div id="fun-bar" class="fill fun" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="icon" title="Dirt (Suciedad)">💩</div>
+                        <span id="dirt-pct" class="stat-pct">0%</span>
+                        <div class="progress-bar">
+                            <div id="dirt-bar" class="fill dirt" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                
+                
+                <div class="stats-footer">
+                    <div class="stat-item coin-item">
+                        <span>💰</span> <span id="coin-display">0</span>
+                    </div>
+                    <div class="stat-item time-item">
+                        <span>⏳</span> <span id="time-display">00:00:00</span>
+                    </div>
+                    
+                    <!-- Manure Bin Inline -->
+                    <div class="manure-inline">
+                        <div id="poop-bin" class="poop-bin" title="Cesto de Abono">🗑️</div>
+                        <button id="sell-manure-btn" class="action-btn-compact" style="display: none;">💵</button>
+                    </div>
+
+                    <!-- Action Buttons Inline -->
+                    <button id="eat-btn" class="action-btn-compact">🍖</button>
+                    <button id="play-btn" class="action-btn-compact">🎾</button>
+                    <button id="clean-btn" class="action-btn-compact">🚿</button>
+                    <button id="rotate-hud-btn" class="action-btn-compact" title="Rotar HUD">🔄</button>
+                    <button id="settings-btn" class="action-btn-compact">⚙️</button>
+                </div>
+            </div>
+
+            <!-- Floating Menus (Hidden by default) - Now directly under hud-wrapper -->
+            <div id="food-menu" class="floating-menu"></div>
+            <div id="game-menu" class="floating-menu"></div>
+            <div id="clean-menu" class="floating-menu"></div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>⚙️ Configuración</h2>
+                <div class="modal-body">
+                    <div class="setting-item">
+                        <label for="pet-name-input">Nombre del personaje:</label>
+                        <input type="text" id="pet-name-input" maxlength="20" placeholder="Infotochi">
+                    </div>
+                    <div class="setting-item">
+                        <label for="pet-opacity-slider">
+                            Transparencia de la mascota: <span id="pet-opacity-value">95%</span>
+                        </label>
+                        <input type="range" id="pet-opacity-slider" min="10" max="100" value="95" step="5">
+                    </div>
+                    <div class="setting-item">
+                        <label for="hud-opacity-slider">
+                            Transparencia del HUD: <span id="hud-opacity-value">95%</span>
+                        </label>
+                        <input type="range" id="hud-opacity-slider" min="10" max="100" value="95" step="5">
+                    </div>
+                    <div class="modal-actions">
+                        <button id="save-game-btn" class="modal-btn">💾 Guardar</button>
+                        <button id="exit-game-btn" class="modal-btn exit-btn">🚪 Salir</button>
+                        <button id="close-modal-btn" class="modal-btn">❌ Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pet" class="square-pet">
+            <div id="speech-bubble" class="speech-bubble hidden"></div>
+            <span id="pet-emoji"></span>
+            <div class="face">
+                <div class="eye left"></div>
+                <div class="eye right"></div>
+                <div class="mouth"></div>
+            </div>
+        </div>
+
+        <!-- Game Over Overlay -->
+        <div id="game-over-screen" class="hidden">
+            <h2>GAME OVER</h2>
+            <div class="skull">☠️</div>
+            <button id="restart-btn" class="action-btn">Reiniciar</button>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>
